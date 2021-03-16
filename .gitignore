@@ -8,7 +8,6 @@ __pycache__
 .ipynb_checkpoints
 
 ## Project
-data/*
 experiments/*
 models/*
 dvc-venv/*
