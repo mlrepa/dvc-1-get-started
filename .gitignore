@@ -1,9 +1,3 @@
-# Data files
-data/*
-!data/.gitignore
-models/*
-!models/.gitignore
-
 ## Mac OS
 .DS_Store
 

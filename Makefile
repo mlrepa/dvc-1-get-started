@@ -1,5 +1,4 @@
 .PHONY: help install test lint format clean run-pipeline tutorial-setup tutorial-clean tutorial-init tutorial-file tutorial-directory tutorial-changes tutorial-versions tutorial-remotes tutorial-advanced tutorial-pipelines tutorial-full tutorial-reset
-CODE_DIRS = src/ tests/
 
 help: ## Show this help message
 	@echo "Available commands:"
@@ -15,23 +14,6 @@ install: ## Install dependencies
 
 pre-commit: ## Run pre-commit on all files
 	uv run pre-commit run --all-files
-
-
-format: ## Format code using Ruff formatter
-	@echo "Formatting code..."
-	uv run ruff format $(CODE_DIRS)
-
-format-check: ## Check if code is formatted correctly (for CI)
-	@echo "Checking code formatting..."
-	uv run ruff format --check $(CODE_DIRS)
-
-lint: ## Check for linting issues using Ruff (no fixes)
-	@echo "Linting code..."
-	uv run ruff check $(CODE_DIRS)
-
-lint-fix: ## Attempt to automatically fix linting issues using Ruff
-	@echo "Attempting to fix linting issues..."
-	uv run ruff check --fix $(CODE_DIRS)
 
 autofix: lint-fix format ## Automatically fix linting issues and then format code
 	@echo "Code auto-fixing and formatting complete."
