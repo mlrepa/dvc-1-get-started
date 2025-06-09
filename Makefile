@@ -53,13 +53,32 @@ tutorial-clean: ## Clean up all DVC-related files and data (reset to initial sta
 		grep -v "^/datadir" .gitignore > .gitignore.tmp && mv .gitignore.tmp .gitignore || true; \
 	fi
 	@# Remove Git branches created during tutorial
-	git checkout update
-	git branch -D cats-dogs-v1 cats-dogs-v2 tutorial
+	@echo "Switching to a safe branch before cleanup..."
+	@if git show-ref --verify --quiet refs/heads/main; then \
+		git checkout main; \
+	elif git show-ref --verify --quiet refs/heads/master; then \
+		git checkout master; \
+	else \
+		git checkout -b cleanup-temp; \
+	fi
+	@echo "Removing tutorial branches..."
+	@for branch in cats-dogs-v1 cats-dogs-v2 tutorial cleanup-temp; do \
+		if git show-ref --verify --quiet refs/heads/$$branch && [ "$$branch" != "$$(git branch --show-current)" ]; then \
+			echo "Deleting branch $$branch"; \
+			git branch -D $$branch 2>/dev/null || true; \
+		fi; \
+	done
 	@echo "✅ DVC tutorial cleanup complete! Repository reset to initial state."
 
-tutorial-init: ## Initialize DVC in the project (Step 1.4)
+dvc-init: ## Initialize DVC in the project (Step 1.4)
 	@echo "🌿 Step 1.4: Init project in 'tutorial' branch"
-	git checkout -b tutorial
+	@if git show-ref --verify --quiet refs/heads/tutorial; then \
+		echo "Branch 'tutorial' exists, switching to it"; \
+		git checkout tutorial; \
+	else \
+		echo "Creating new branch 'tutorial'"; \
+		git checkout -b tutorial; \
+	fi
 	@echo "🚀 Step 1.4: Initialize DVC in Your Project"
 	dvc init
 	@echo "📁 DVC initialized! Let's see what was created:"
@@ -69,7 +88,7 @@ tutorial-init: ## Initialize DVC in the project (Step 1.4)
 	git commit -m "Initialize DVC"
 	@echo "✅ DVC initialization complete!"
 
-tutorial-file: tutorial-init ## Version your first dataset file (Section 2)
+dvc-track-file:  ## Version your first dataset file (Section 2)
 	@echo "⭐ Section 2: Versioning Your First Dataset (File)"
 	@echo "📥 Step 2.1: Download Raw Data"
 	mkdir -p data
@@ -83,10 +102,16 @@ tutorial-file: tutorial-init ## Version your first dataset file (Section 2)
 	git commit -m "Add raw data.xml"
 	@echo "✅ File versioning complete!"
 
-tutorial-directory: tutorial-file ## Version a directory dataset (Section 3)
+dvc-track-directory: ## Version a directory dataset (Section 3)
 	@echo "📁 Section 3: Versioning a Directory (Cats & Dogs Dataset)"
 	@echo "🌿 Step 3.1: Create a New Git Branch"
-	git checkout -b cats-dogs-v1
+	@if git show-ref --verify --quiet refs/heads/cats-dogs-v1; then \
+		echo "Branch 'cats-dogs-v1' exists, switching to it"; \
+		git checkout cats-dogs-v1; \
+	else \
+		echo "Creating new branch 'cats-dogs-v1'"; \
+		git checkout -b cats-dogs-v1; \
+	fi
 	@echo "📥 Step 3.2: Download the Cats & Dogs Dataset"
 	dvc get --rev cats-dogs-v1 https://github.com/iterative/dataset-registry use-cases/cats-dogs -o datadir
 	@echo "📝 Step 3.3: Add the Directory to DVC"
@@ -99,12 +124,18 @@ tutorial-directory: tutorial-file ## Version a directory dataset (Section 3)
 	git tag -a cats-dogs-v1 -m "Dataset version v1.0"
 	@echo "✅ Directory versioning complete!"
 
-tutorial-changes: tutorial-directory ## Track changes and update data (Section 4)
+dvc-track-changes: ## Track changes and update data (Section 4)
 	@echo "♻️ Section 4: Tracking Changes & Updating Data"
 	@echo "🔍 Step 4.1: Check Current DVC Status"
 	dvc status
 	@echo "🌿 Step 4.2: Introduce a New Data Version"
-	git checkout -b cats-dogs-v2
+	@if git show-ref --verify --quiet refs/heads/cats-dogs-v2; then \
+		echo "Branch 'cats-dogs-v2' exists, switching to it"; \
+		git checkout cats-dogs-v2; \
+	else \
+		echo "Creating new branch 'cats-dogs-v2'"; \
+		git checkout -b cats-dogs-v2; \
+	fi
 	dvc get --rev cats-dogs-v2 https://github.com/iterative/dataset-registry use-cases/cats-dogs -o datadir
 	@echo "🔍 Check status after data change:"
 	dvc status
@@ -115,10 +146,18 @@ tutorial-changes: tutorial-directory ## Track changes and update data (Section 4
 	git tag -a cats-dogs-v2 -m "Dataset version v2.0"
 	@echo "✅ Change tracking complete!"
 
-tutorial-versions: tutorial-changes ## Switch between data versions (Section 5)
+dvc-switch-versions: ## Switch between data versions (Section 5)
 	@echo "⏪ Section 5: Switching Between Data Versions"
 	@echo "🔄 Step 5.1: Switch to Different Branch"
-	git checkout tutorial || git checkout main || git checkout master
+	@if git show-ref --verify --quiet refs/heads/tutorial; then \
+		git checkout tutorial; \
+	elif git show-ref --verify --quiet refs/heads/main; then \
+		git checkout main; \
+	elif git show-ref --verify --quiet refs/heads/master; then \
+		git checkout master; \
+	else \
+		echo "No suitable branch found, staying on current branch"; \
+	fi
 	@echo "📁 Current files:"
 	ls
 	@echo "🔄 DVC checkout to sync data:"
@@ -131,7 +170,7 @@ tutorial-versions: tutorial-changes ## Switch between data versions (Section 5)
 	dvc checkout
 	@echo "✅ Version switching complete!"
 
-tutorial-remotes: tutorial-versions ## Set up and use remotes (Section 6)
+dvc-add-remotes:  ## Set up and use remotes (Section 6)
 	@echo "☁️ Section 6: Storing and Sharing Data with Remotes"
 	@echo "📁 Step 6.1: Set Up a Local Remote Storage"
 	mkdir -p /tmp/dvc_remote_storage
@@ -153,7 +192,7 @@ tutorial-remotes: tutorial-versions ## Set up and use remotes (Section 6)
 	ls datadir data
 	@echo "✅ Remote storage setup complete!"
 
-tutorial-advanced: tutorial-remotes ## Advanced data access commands (Section 7)
+dvc-advanced:  ## Advanced data access commands (Section 7)
 	@echo "📥 Section 7: Advanced Data Access Commands"
 	@echo "🔍 Step 7.1: Explore Remote DVC Repositories"
 	dvc list https://github.com/iterative/dataset-registry use-cases
@@ -171,39 +210,8 @@ tutorial-advanced: tutorial-remotes ## Advanced data access commands (Section 7)
 	ls *.xml* | head -10
 	@echo "✅ Advanced data access complete!"
 
-tutorial-pipelines: tutorial-advanced ## Automate model versioning with pipelines (Section 8)
-	@echo "🤖 Section 8: Automating Model Versioning with DVC Pipelines"
-	@echo "🔄 Ensure we're on cats-dogs-v2 branch with data"
-	git checkout cats-dogs-v2
-	dvc checkout
-	@echo "🧹 Clean up any existing pipeline artifacts"
-	-dvc remove model.weights.h5.dvc --force 2>/dev/null || true
-	-git rm --cached model.weights.h5.dvc 2>/dev/null || true
-	@echo "📝 Step 8.2: Define an ML Pipeline Stage"
-	@echo "Creating a simple train.py script for demonstration..."
-	@echo '#!/usr/bin/env python3' > train.py
-	@echo 'import json' >> train.py
-	@echo 'import os' >> train.py
-	@echo 'print("Training model with cats-dogs dataset...")' >> train.py
-	@echo 'print(f"Dataset size: {len(os.listdir("datadir/data/train/cats")) if os.path.exists("datadir/data/train/cats") else 0} cats")' >> train.py
-	@echo 'with open("model.weights.h5", "w") as f: f.write("fake_model_weights")' >> train.py
-	@echo 'with open("metrics.csv", "w") as f: f.write("accuracy,0.85\\nloss,0.23")' >> train.py
-	@echo 'print("Model saved to model.weights.h5, metrics to metrics.csv")' >> train.py
-	chmod +x train.py
-	dvc stage add -n train -d train.py -d datadir -o model.weights.h5 -M metrics.csv python train.py
-	@echo "👀 Check the generated dvc.yaml:"
-	cat dvc.yaml
-	git add dvc.yaml
-	git commit -m "Define train pipeline stage"
-	@echo "🔄 Step 8.3: Reproduce the Pipeline"
-	dvc repro
-	@echo "📁 Check generated files:"
-	ls model.weights.h5 metrics.csv
-	@echo "🔄 Run dvc repro again (should show up to date):"
-	dvc repro
-	@echo "✅ Pipeline automation complete!"
 
-tutorial-full: tutorial-pipelines ## Run the complete tutorial from start to finish
+dvc-full: dvc-init dvc-track-file dvc-track-directory dvc-track-changes dvc-switch-versions dvc-add-remotes dvc-advanced
 	@echo "🎉 Complete DVC Tutorial finished!"
 	@echo "📋 Summary of what was accomplished:"
 	@echo "  ✅ Initialized DVC"
@@ -212,22 +220,7 @@ tutorial-full: tutorial-pipelines ## Run the complete tutorial from start to fin
 	@echo "  ✅ Switched between versions"
 	@echo "  ✅ Set up remote storage"
 	@echo "  ✅ Used advanced data access"
-	@echo "  ✅ Created ML pipelines"
-	@echo ""
-	@echo "🔍 Current project state:"
-	@echo "Git branches:"
-	git branch -a
-	@echo ""
-	@echo "Git tags:"
-	git tag
-	@echo ""
-	@echo "DVC status:"
-	dvc status
-	@echo ""
-	@echo "🎓 Tutorial complete! Check tutorial.md for detailed explanations."
 
-tutorial-reset: tutorial-clean tutorial-init ## Reset and restart tutorial from beginning
-	@echo "🔄 Tutorial reset complete! Ready to start fresh with DVC initialized."
 
 tutorial-setup: ## Show tutorial setup and available commands
 	@echo "🚀 DVC Tutorial Setup"
@@ -241,9 +234,7 @@ tutorial-setup: ## Show tutorial setup and available commands
 	@echo "  make tutorial-versions  - Switch between versions (Section 5)"
 	@echo "  make tutorial-remotes   - Set up remote storage (Section 6)"
 	@echo "  make tutorial-advanced  - Advanced data access (Section 7)"
-	@echo "  make tutorial-pipelines - ML pipelines (Section 8)"
 	@echo "  make tutorial-full      - Run complete tutorial"
-	@echo "  make tutorial-reset     - Clean and restart from beginning"
 	@echo ""
 	@echo "💡 Tip: Run 'make tutorial-full' to execute the entire tutorial automatically!"
 	@echo "📖 For detailed explanations, follow along with tutorial.md"

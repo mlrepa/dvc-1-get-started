@@ -51,14 +51,10 @@
   * [### Step 7.2: Download Data Without Tracking (`dvc get`)](#-step-72-download-data-without-tracking-dvc-get)
   * [### Step 7.3: Download and Track Data (`dvc import`)](#-step-73-download-and-track-data-dvc-import)
   * [### Step 7.4: Track External URLs (`dvc import-url`)](#-step-74-track-external-urls-dvc-import-url)
-* [🤖 8. Automating Model Versioning with DVC Pipelines](#-8-automating-model-versioning-with-dvc-pipelines)
-  * [### Step 8.1: Understand the `train.py` Script](#-step-81-understand-the-trainpy-script)
-  * [### Step 8.2: Define an ML Pipeline Stage (`dvc stage add`)](#-step-82-define-an-ml-pipeline-stage-dvc-stage-add)
-  * [### Step 8.3: Reproduce the Pipeline (`dvc repro`)](#-step-83-reproduce-the-pipeline-dvc-repro)
-* [🔍 9. Understanding DVC File and Cache Internals](#-9-understanding-dvc-file-and-cache-internals)
-  * [### Step 9.1: The `.dvc` File](#-step-91-the-dvc-file)
-  * [### Step 9.2: The DVC Cache (`.dvc/cache`)](#-step-92-the-dvc-cache-dvc/cache)
-  * [### Step 9.3: The `.dvc` Directory Structure](#-step-93-the-dvc-directory-structure)
+* [🔍 8. Understanding DVC File and Cache Internals](#-8-understanding-dvc-file-and-cache-internals)
+  * [### Step 8.1: The `.dvc` File](#-step-81-the-dvc-file)
+  * [### Step 8.2: The DVC Cache (`.dvc/cache`)](#-step-82-the-dvc-cache-dvc/cache)
+  * [### Step 8.3: The `.dvc` Directory Structure](#-step-83-the-dvc-directory-structure)
 * [🔗 Additional Resources](#-additional-resources)
 * [🎉 Conclusion & Next Steps](#-conclusion--next-steps)
 
@@ -474,10 +470,14 @@ dvc checkout
 
 ```
 M       data/data.xml
-A       datadir
+D       datadir
 ```
 
-Wait, `datadir` suddenly appeared! That's because when you switched branches, `dvc checkout` detected that the `tutorial` branch's `data/data.xml.dvc` file points to a different version than what's currently in your workspace (it brought back the `data.xml` content) and also noticed `datadir` is not tracked there so it deleted it from your workspace to match the `tutorial` branch's Git state. This is an artifact of mixing different experiments on different branches.
+The `datadir` disappeared! That's because when you switched to the `tutorial` branch, `dvc checkout` detected that:
+1. The `tutorial` branch's `data/data.xml.dvc` file points to a different version than what's currently in your workspace (it brought back the `data.xml` content - hence `M` for modified)
+2. The `tutorial` branch doesn't have a `datadir.dvc` file, so DVC removed `datadir` from your workspace to match the `tutorial` branch's Git state (hence `D` for deleted)
+
+This demonstrates how DVC keeps your workspace synchronized with the data versions defined in your current Git commit.
 
 Let's specifically try to restore the `cats-dogs-v1` version.
 
@@ -747,134 +747,7 @@ You will find `external_data.xml` and `external_data.xml.dvc` in your project. I
 
 ---
 
-## 🤖 8. Automating Model Versioning with DVC Pipelines
-
-While `dvc add` is great for raw data and final models, DVC also offers pipelines (`dvc stage add` and `dvc repro`) to version the *entire workflow* that produces a model, tying inputs, code, and outputs together. This is crucial for ML experiment reproducibility.
-
-### Step 8.1: Understand the `train.py` Script
-
-The `example-versioning` repository you cloned contains a `train.py` script. This script:
-
-1. Loads data from the `datadir` (the cats & dogs dataset).
-2. Performs a pre-processing step (feature extraction).
-3. Trains a simple image classification model.
-4. Saves the trained model as `model.weights.h5`.
-5. Saves training metrics to `metrics.csv`.
-
-For this tutorial, consider `train.py` as a "black box" – the specific ML algorithm or Keras knowledge is not required. Our focus is on how DVC helps manage its inputs and outputs.
-
-Let's ensure we're on a clean Git state, and remove any old `model.weights.h5.dvc` files if they exist from previous runs.
-
-```bash
-git checkout cats-dogs-v2 # Ensure we're on a branch with datadir
-dvc checkout # Ensure datadir is present
-dvc remove model.weights.h5.dvc --force 2>/dev/null || true # Ignore error if file doesn't exist
-git rm --cached model.weights.h5.dvc 2>/dev/null || true # Remove from Git index if needed
-```
-
-This prepares our workspace for defining the pipeline.
-
-### Step 8.2: Define an ML Pipeline Stage (`dvc stage add`)
-
-Instead of manually adding `model.weights.h5` and `metrics.csv` after `train.py` runs, we can define a DVC pipeline stage that encapsulates the entire process.
-
-```bash
-dvc stage add -n train -d train.py -d datadir \
-          -o model.weights.h5 -M metrics.csv \
-          python train.py
-```
-
-**Output (example):**
-
-```
-'train' was added to your pipeline. To reproduce it, run 'dvc repro'.
-```
-
-What this command does:
-
-* **`dvc stage add -n train`**: Creates a new pipeline stage named `train`.
-* **`-d train.py -d datadir`**: Declares `train.py` (the code) and `datadir` (the input data) as **dependencies** of this stage. If either changes, DVC knows the stage needs to be re-run.
-* **`-o model.weights.h5`**: Declares `model.weights.h5` as an **output** of this stage. DVC will version this file automatically.
-* **`-M metrics.csv`**: Declares `metrics.csv` as a **metric file** output. This allows DVC to track and compare metrics across experiments.
-* **`python train.py`**: Specifies the **command** that DVC should run to execute this stage.
-
-This command also generates a `dvc.yaml` file (or updates it if it exists), which defines your ML pipeline.
-
-```bash
-cat dvc.yaml
-```
-
-**Output (example):**
-
-```yaml
-stages:
-  train:
-    cmd: python train.py
-    deps:
-    - train.py
-    - datadir
-    outs:
-    - model.weights.h5
-    metrics:
-    - metrics.csv
-```
-
-This `dvc.yaml` file is plain text and versioned by Git, just like your code. It's the blueprint of your ML workflow.
-
-Commit the `dvc.yaml` file to Git:
-
-```bash
-git add dvc.yaml
-git commit -m "Define train pipeline stage"
-```
-
-**Output:**
-
-```
-[cats-dogs-v2 1f2g3h4] Define train pipeline stage
- 1 file changed, 8 insertions(+)
- create mode 100644 dvc.yaml
-```
-
-### Step 8.3: Reproduce the Pipeline (`dvc repro`)
-
-Now that the pipeline stage is defined, you can run it using `dvc repro`.
-
-```bash
-dvc repro
-```
-
-**Output (example):**
-
-```
-Running stage 'train':
-    python train.py
-... (output from train.py script, including Keras/TensorFlow logs) ...
-100%|█████████████████████████████████████████████████████████████████████████████████████| 2/2 [00:00]
-Reproduced stage 'train'.
-```
-
-`dvc repro` executes the `train` stage. It checks the dependencies (`train.py`, `datadir`). If any dependency has changed since the last run, it re-runs the command (`python train.py`) and captures the outputs (`model.weights.h5`, `metrics.csv`) into the DVC cache, updating their `.dvc` file pointers implicitly.
-
-If you run `dvc repro` again without changing anything, it will report:
-
-```bash
-dvc repro
-```
-
-**Output:**
-
-```
-Data and pipelines are up to date.
-```
-
-This shows its ability to track and only re-run what's necessary, saving computation.
-
-👉 **Real-World MLOps Relevance:** Using `dvc stage add` and `dvc repro` for pipelines is a cornerstone of reproducible ML. It means that anyone (your future self, a teammate, a CI/CD system) can execute `dvc repro` and get the *exact same* data and model outputs, even if they only have the Git repository. This is critical for reliable deployments and debugging.
-
----
-
-## 🔍 9. Understanding DVC File and Cache Internals
+## 🔍 8. Understanding DVC File and Cache Internals
 
 Let's take a closer look at the files and directories DVC creates and manages, which underpin its versioning capabilities.
 
@@ -967,103 +840,11 @@ Congratulations! You've successfully completed this hands-on tutorial on Data an
 
 ### Where to go from here?
 
-* **Experiment Management (MLflow):** Explore how DVC integrates seamlessly with MLflow for comprehensive experiment tracking, logging metrics, and managing models in a registry.
+* **Experiment Management (MLflow):** Explore how DVC integrates with MLflow for comprehensive experiment tracking, logging metrics, and managing models in a registry.
 * **Continuous Integration/Delivery for ML (CI/CD for MLOps):** Learn how to set up CI/CD pipelines that leverage DVC's `dvc repro` to automate model retraining, evaluation, and deployment upon code or data changes.
 * **Advanced DVC Features:** Dive deeper into DVC's capabilities for metrics and plots tracking, experiment versioning (`dvc exp`), and managing more complex data dependencies.
 * **Cloud Remotes:** Transition from local DVC remotes to cloud storage solutions (AWS S3, Google Cloud Storage, Azure Blob Storage) for real-world production deployments.
 
 Keep practicing these MLOps fundamentals. The ability to version, reproduce, and share your data and models reliably is a superpower in modern AI development!
 
-[⬆️ Back to Table of Contents](#-table-of-contents)
-
----
-
-## DVC Commands API Analysis and Suggestions for Updates
-
-The provided tutorial uses a very solid set of DVC commands that are still highly relevant and foundational. DVC's CLI has remained remarkably stable in its core functionality, but there have been refinements, new features, and changes in recommended best practices, especially around pipeline management.
-
-Here's an analysis of the commands used in the context of current DVC versions (e.g., 3.x and above, as of late 2023/early 2024):
-
-### Commands Analyzed
-
-* `dvc init`
-* `dvc status`
-* `dvc add`
-* `dvc get`
-* `dvc remote add`
-* `dvc push`
-* `dvc pull`
-* `dvc list`
-* `dvc import`
-* `dvc import-url`
-* `dvc remove`
-* `dvc stage add` (formerly `dvc run`)
-* `dvc repro`
-
-### Analysis and Suggestions
-
-1. **`dvc init`**:
-    * **Current State:** Remains the same. It's the essential first step.
-    * **Improvements/Tips:** None for the command itself. Emphasize committing `.dvc/` to Git immediately.
-
-2. **`dvc status`**:
-    * **Current State:** Works as described, showing discrepancies between workspace, cache, and `.dvc` files.
-    * **Improvements/Tips:** Can be used with `--jobs N` for larger projects, though not typically necessary in a tutorial. No major API changes.
-
-3. **`dvc add <path>`**:
-    * **Current State:** Core command for data versioning. Behavior for files vs. directories is consistent.
-    * **Improvements/Tips:**
-        * The tutorial correctly introduces `dvc add` for `data.xml` and `datadir`. It's important to clarify that this is for *source data* or *external models* that you don't generate with a script *within* DVC.
-        * For outputs of scripts (like `model.weights.h5` or `metrics.csv`), `dvc stage add` (or the older `dvc run`) is indeed the **preferred and recommended method** as it provides lineage. The tutorial's "Automating Capturing" section correctly pivots to this.
-
-4. **`dvc get <repo_url> <path_in_repo> -o <output_path>`**:
-    * **Current State:** Remains the command for downloading data from another DVC repository.
-    * **Improvements/Tips:** None for the command itself. The `--rev` flag used in the tutorial is excellent for fetching specific versions, which is highly valuable.
-
-5. **`dvc remote add [-d] <name> <url>`**:
-    * **Current State:** Essential for configuring remotes.
-    * **Improvements/Tips:**
-        * The tutorial uses a local path `/tmp/dvc_remote_storage`. For a real-world scenario, explicitly mention cloud providers (S3, GCS, Azure Blob, Rucio, WebDAV etc.) as the common use cases for `url`. Example: `dvc remote add my_s3_remote s3://my-bucket/dvc-store`.
-        * Briefly mention credential management for cloud remotes (e.g., DVC uses boto3 for AWS, google-cloud-storage for GCS, etc., relying on environment variables or config files).
-
-6. **`dvc push [-v]`**:
-    * **Current State:** Uploads cached data to the remote.
-    * **Improvements/Tips:** No major changes. It's robust.
-
-7. **`dvc pull [-v]`**:
-    * **Current State:** Downloads missing data to the local cache and links it to the workspace.
-    * **Improvements/Tips:** No major changes. It's robust.
-
-8. **`dvc list <repo_url> [path]`**:
-    * **Current State:** Useful for exploring DVC repositories remotely.
-    * **Improvements/Tips:** None for the command itself.
-
-9. **`dvc import <repo_url> <path_in_repo> -o <output_path>`**:
-    * **Current State:** Imports data from another DVC repository and adds it to your project.
-    * **Improvements/Tips:** None. It's a convenient shorthand for `dvc get` + `dvc add` for external DVC-tracked data.
-
-10. **`dvc import-url <url> -o <output_path>`**:
-    * **Current State:** Imports data from *any* URL (not necessarily a DVC repo) and tracks it.
-    * **Improvements/Tips:** None. This is highly useful for integrating publicly available datasets or large external files directly into your DVC project.
-
-11. **`dvc remove <dvc_file_path>`**:
-    * **Current State:** Removes a `.dvc` file and its corresponding data from the workspace, optionally from the cache.
-    * **Improvements/Tips:** The `--force` flag is often needed to delete the actual `.dvc` file from the workspace if it's already in the Git index. It's properly demonstrated for cleanup.
-
-12. **`dvc stage add [-n <name>] -d <deps> -o <outs> [-M <metrics>] <command>`**:
-    * **Current State:** This command is the **modern and highly recommended way** to define pipeline stages. It replaces the older `dvc run` command. The tutorial correctly uses `dvc stage add`.
-    * **Improvements/Tips:**
-        * The tutorial uses it perfectly to define dependencies and outputs.
-        * Emphasize that this command creates/modifies `dvc.yaml`, the standard for DVC pipelines.
-        * For metrics, `dvc metrics show` and `dvc metrics diff` can be powerful follow-up commands to demonstrate after defining a metric output. This is hinted at in the original "What's next?" section and could be briefly demonstrated.
-        * Could mention `--live` flag for real-time metric tracking during training in more advanced scenarios (but out of scope for basic versioning).
-
-13. **`dvc repro [stage_name]`**:
-    * **Current State:** The core command to reproduce pipeline stages.
-    * **Improvements/Tips:** No major changes. Crucial for reproducibility.
-
-### Overall API Consistency and Evolution
-
-DVC's command-line interface is generally very consistent and intuitive, often mirroring Git commands where applicable (`add`, `checkout`, `push`, `pull`). The evolution from `dvc run` to `dvc stage add` was a positive step, making the terminology clearer and better aligned with pipeline concepts (`dvc.yaml`).
-
-The tutorial covers the essential commands comprehensively and explains their functionality well. No critical API syntax changes would render the tutorial commands obsolete. The proposed tutorial flow and explanations are highly effective for teaching DVC fundamentals.
+[⬆️ Back to Table of Contents](#-table-of-contents)å
