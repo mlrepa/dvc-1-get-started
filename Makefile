@@ -1,4 +1,4 @@
-.PHONY: help install test lint format clean run-pipeline tutorial-setup tutorial-clean tutorial-init tutorial-file tutorial-directory tutorial-changes tutorial-versions tutorial-remotes tutorial-advanced tutorial-pipelines tutorial-full tutorial-reset
+.PHONY: help install test lint format clean tutorial-clean
 
 help: ## Show this help message
 	@echo "Available commands:"
@@ -14,15 +14,6 @@ install: ## Install dependencies
 
 pre-commit: ## Run pre-commit on all files
 	uv run pre-commit run --all-files
-
-autofix: lint-fix format ## Automatically fix linting issues and then format code
-	@echo "Code auto-fixing and formatting complete."
-
-type-check: ## Run mypy type checking separately
-	uv run mypy src/ --config-file=pyproject.toml
-
-check-all: lint format-check type-check test pre-commit ## Run all checks (lint + test)
-	@echo "All checks complete."
 
 
 tutorial-clean: ## Clean up all DVC-related files and data (reset to initial state)
