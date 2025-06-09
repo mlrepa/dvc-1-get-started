@@ -1,82 +1,154 @@
-## 🚀 Tutorial: Data and Model Versioning with DVC
-
----
+# 🚀 Tutorial: Get started with Data Version Control (DVC)
 
 ## 👀 Description
 
-* `🎓 What is this?` This tutorial provides hands-on experience with **Data Version Control (DVC)**, demonstrating how to manage multiple datasets and machine learning model artifacts alongside your code. We'll use a classic image classification problem (cats vs. dogs) to illustrate DVC's capabilities for reproducibility and collaboration in MLOps.
-* `👩‍💻 Who is this for?` ML Engineers, Data Scientists, and AI Developers who need to manage large datasets and models within Git repositories, ensuring experiment reproducibility and traceable deployments. A basic understanding of Python, Git, and command-line operations is assumed.
-* `🎯 What will you learn?`
-  * How to initialize a DVC project within a Git repository.
-  * How to version large files and directories using `dvc add`.
-  * How DVC tracks data changes using `.dvc` files and a cache.
-  * How to switch between different versions of your data and models using `dvc checkout`.
-  * How to set up and use remote storage to store and share DVC-tracked data with `dvc push` and `dvc pull`.
-  * Advanced data access methods like `dvc get`, `dvc import`, and `dvc import-url`.
-  * The fundamentals of DVC pipelines using `dvc stage add` and `dvc repro` for automating ML workflows.
-* `🔍 How is it structured?` We'll start by setting up our environment and performing basic file and directory versioning. Then, we'll demonstrate tracking changes and switching versions. Next, we'll configure remote storage for sharing data. Finally, we'll cover advanced data access patterns and introduce DVC pipelines for automated model versioning.
-* `⏱️ How much time will it take?` Approximately **55-70 minutes** to complete, providing a solid foundation in DVC for your MLOps workflows.
+`🎓 What is this?` This tutorial provides hands-on experience with **Data Version Control (DVC)**, demonstrating how to manage multiple datasets and machine learning model artifacts alongside your code. We'll use a classic image classification problem (cats vs. dogs) to illustrate DVC's capabilities for reproducibility and collaboration in MLOps.
+
+`👩‍💻 Who is this for?` ML Engineers, Data Scientists, and AI Developers who need to manage large datasets and models within Git repositories, ensuring experiment reproducibility and traceable deployments. A basic understanding of Python, Git, and command-line operations is assumed.
+
+`🎯 What will you learn?`
+
+- How to initialize a DVC project within a Git repository.
+- How to version large files and directories using `dvc add`.
+- How DVC tracks data changes using `.dvc` files and a cache.
+- How to switch between different versions of your data and models using `dvc checkout`.
+- How to set up and use remote storage to store and share DVC-tracked data with `dvc push` and `dvc pull`.
+- Advanced data access methods like `dvc get`, `dvc import`, and `dvc import-url`.
+- *The fundamentals of DVC pipelines using `dvc stage add` and `dvc repro` for automating ML workflows.*
+
+(This is a conceptual learning objective, even if the dedicated section is removed, as it's a core DVC concept.)
+
+`🔍 How is it structured?` We'll start by setting up our environment and performing basic file and directory versioning. Then, we'll demonstrate tracking changes and switching versions. Next, we'll configure remote storage for sharing data. Finally, we'll cover advanced data access patterns and introduce DVC pipelines for automated model versioning conceptually.
+
+`⏱️ How much time will it take?` Approximately **55-70 minutes** to complete, providing a solid foundation in DVC for your MLOps workflows.
 
 ---
 
 ## 📖 Table of Contents
 
-* [⚙️ 1. Setting Up Your Environment](#-1-setting-up-your-environment)
-  * [### Step 1.1: Prerequisites](#-step-11-prerequisites)
-  * [### Step 1.2: Clone the Project Repository](#-step-12-clone-the-project-repository)
-  * [### Step 1.3: Initialize Your Python Environment](#-step-13-initialize-your-python-environment)
-  * [### Step 1.4: Initialize DVC in Your Project](#-step-14-initialize-dvc-in-your-project)
-* [⭐ 2. Versioning Your First Dataset (File)](#-2-versioning-your-first-dataset-file)
-  * [### Step 2.1: Download Raw Data](#-step-21-download-raw-data)
-  * [### Step 2.2: Add the File to DVC](#-step-22-add-the-file-to-dvc)
-  * [### Step 2.3: Commit DVC-file to Git](#-step-23-commit-dvc-file-to-git)
-* [📁 3. Versioning a Directory (Cats & Dogs Dataset)](#-3-versioning-a-directory-cats--dogs-dataset)
-  * [### Step 3.1: Create a New Git Branch](#-step-31-create-a-new-git-branch)
-  * [### Step 3.2: Download the Cats & Dogs Dataset](#-step-32-download-the-cats--dogs-dataset)
-  * [### Step 3.3: Add the Directory to DVC](#-step-33-add-the-directory-to-dvc)
-  * [### Step 3.4: Commit the DVC-file and Tag the Version](#-step-34-commit-the-dvc-file-and-tag-the-version)
-* [♻️ 4. Tracking Changes & Updating Data](#-4-tracking-changes--updating-data)
-  * [### Step 4.1: Check Current DVC Status](#-step-41-check-current-dvc-status)
-  * [### Step 4.2: Introduce a New Data Version](#-step-42-introduce-a-new-data-version)
-  * [### Step 4.3: Capture the New Data Version with DVC](#-step-43-capture-the-new-data-version-with-dvc)
-* [⏪ 5. Switching Between Data Versions (`dvc checkout`)](#-5-switching-between-data-versions-dvc-checkout)
-  * [### Step 5.1: Switch to a Different Branch (Without `datadir`)](#-step-51-switch-to-a-different-branch-without-datadir)
-  * [### Step 5.2: Restore a Specific Data Version](#-step-52-restore-a-specific-data-version)
-* [☁️ 6. Storing and Sharing Data with Remotes](#-6-storing-and-sharing-data-with-remotes)
-  * [### Step 6.1: Set Up a Local Remote Storage](#-step-61-set-up-a-local-remote-storage)
-  * [### Step 6.2: Push Data to Remote Storage](#-step-62-push-data-to-remote-storage)
-  * [### Step 6.3: Retrieve Data from Remote Storage](#-step-63-retrieve-data-from-remote-storage)
-* [📥 7. Advanced Data Access Commands](#-7-advanced-data-access-commands)
-  * [### Step 7.1: Explore Remote DVC Repositories (`dvc list`)](#-step-71-explore-remote-dvc-repositories-dvc-list)
-  * [### Step 7.2: Download Data Without Tracking (`dvc get`)](#-step-72-download-data-without-tracking-dvc-get)
-  * [### Step 7.3: Download and Track Data (`dvc import`)](#-step-73-download-and-track-data-dvc-import)
-  * [### Step 7.4: Track External URLs (`dvc import-url`)](#-step-74-track-external-urls-dvc-import-url)
-* [🔍 8. Understanding DVC File and Cache Internals](#-8-understanding-dvc-file-and-cache-internals)
-  * [### Step 8.1: The `.dvc` File](#-step-81-the-dvc-file)
-  * [### Step 8.2: The DVC Cache (`.dvc/cache`)](#-step-82-the-dvc-cache-dvc/cache)
-  * [### Step 8.3: The `.dvc` Directory Structure](#-step-83-the-dvc-directory-structure)
-* [🔗 Additional Resources](#-additional-resources)
-* [🎉 Conclusion & Next Steps](#-conclusion--next-steps)
+- [⚙️ 1. Setting Up Your Environment](#-1-setting-up-your-environment)
+  - [Step 1.2: Clone the Project Repository](#-step-12-clone-the-project-repository)
+  - [Step 1.3: Initialize Your Python Environment](#-step-13-initialize-your-python-environment)
+  - [Step 1.4: Initialize DVC in Your Project](#-step-14-initialize-dvc-in-your-project)
+- [⭐ 2. Versioning Your First Dataset (File)](#-2-versioning-your-first-dataset-file)
+  - [Step 2.1: Download Raw Data](#-step-21-download-raw-data)
+  - [Step 2.2: Add the File to DVC](#-step-22-add-the-file-to-dvc)
+  - [Step 2.3: Commit DVC-file to Git](#-step-23-commit-dvc-file-to-git)
+- [📁 3. Versioning a Directory (Cats & Dogs Dataset)](#-3-versioning-a-directory-cats--dogs-dataset)
+  - [Step 3.1: Create a New Git Branch](#-step-31-create-a-new-git-branch)
+  - [Step 3.2: Download the Cats & Dogs Dataset](#-step-32-download-the-cats--dogs-dataset)
+  - [Step 3.3: Add the Directory to DVC](#-step-33-add-the-directory-to-dvc)
+  - [Step 3.4: Commit the DVC-file and Tag the Version](#-step-34-commit-the-dvc-file-and-tag-the-version)
+- [♻️ 4. Tracking Changes & Updating Data](#-4-tracking-changes--updating-data)
+  - [Step 4.1: Check Current DVC Status](#-step-41-check-current-dvc-status)
+  - [Step 4.2: Introduce a New Data Version](#-step-42-introduce-a-new-data-version)
+  - [Step 4.3: Capture the New Data Version with DVC](#-step-43-capture-the-new-data-version-with-dvc)
+- [⏪ 5. Switching Between Data Versions (`dvc checkout`)](#-5-switching-between-data-versions-dvc-checkout)
+  - [Step 5.1: Switch to a Different Branch (`datadir` Removal)](#-step-51-switch-to-a-different-branch-datadir-removal)
+  - [Step 5.2: Restore a Specific Data Version](#-step-52-restore-a-specific-data-version)
+- [☁️ 6. Storing and Sharing Data with Remotes](#-6-storing-and-sharing-data-with-remotes)
+  - [Step 6.1: Set Up a Local Remote Storage](#-step-61-set-up-a-local-remote-storage)
+  - [Step 6.2: Push Data to Remote Storage](#-step-62-push-data-to-remote-storage)
+  - [Step 6.3: Retrieve Data from Remote Storage](#-step-63-retrieve-data-from-remote-storage)
+- [📥 7. Advanced Data Access Commands](#-7-advanced-data-access-commands)
+  - [Step 7.1: Explore Remote DVC Repositories (`dvc list`)](#-step-71-explore-remote-dvc-repositories-dvc-list)
+  - [Step 7.2: Download Data Without Tracking (`dvc get`)](#-step-72-download-data-without-tracking-dvc-get)
+  - [Step 7.3: Download and Track Data (`dvc import`)](#-step-73-download-and-track-data-dvc-import)
+  - [Step 7.4: Track External URLs (`dvc import-url`)](#-step-74-track-external-urls-dvc-import-url)
+- [🔍 8. Understanding DVC File and Cache Internals](#-8-understanding-dvc-file-and-cache-internals)
+  - [Step 8.1: The `.dvc` File](#-step-81-the-dvc-file)
+  - [Step 8.2: The DVC Cache (`.dvc/cache`)](#-step-82-the-dvc-cache-dvc/cache)
+  - [Step 8.3: The `.dvc` Directory Structure](#-step-83-the-dvc-directory-structure)
+- [🔗 Additional Resources](#-additional-resources)
+- [🎉 Conclusion & Next Steps](#-conclusion--next-steps)
 
 ---
 
 ## ⚙️ 1. Setting Up Your Environment
 
-Setup Instructions:
+Let's prepare your system for working with **DVC**.
 
-For detailed, step-by-step instructions on how to:
+### Step 1.1: Prerequisites
 
-* Clone the project repository,
-* Create a Python virtual environment using uv, and
-* Install all required dependencies,
+Make sure you have the following installed:
 
-please refer to the 👩‍💻 Quick Start: Installation & Setup section in the project's README.md file.
+- **Python 3.8+**: For running the `train.py` script.
+- **Git**: Essential for version control of your code and **DVC-files**.
+- **DVC (Data Version Control)**: Follow the [official DVC installation instructions](https://dvc.org/doc/install) if you don't have it already.
+- **`unzip`**: A command-line tool for extracting `.zip` archives.
 
-Once you have successfully completed the setup steps outlined in the README.md, your environment will be ready, and you can proceed with this tutorial.
+### Step 1.2: Clone the Project Repository
+
+We'll start by cloning a ready-made **Git** repository that contains a `train.py` script and `requirements.txt`.
+
+```bash
+git clone https://github.com/iterative/example-versioning.git
+cd example-versioning
+```
+
+**Output (example):**
+
+```
+Cloning into 'example-versioning'...
+remote: Enumerating objects: 49, done.
+...
+```
+
+Now, let's create a new **Git** branch for our tutorial work to keep things organized.
+
+```bash
+git checkout -b tutorial
+```
+
+**Output:**
+
+```
+Switched to a new branch 'tutorial'
+```
+
+### Step 1.3: Initialize Your Python Environment
+
+It's best practice to use a virtual environment for your **Python** projects to manage dependencies.
+
+1. **Create a virtual environment:**
+
+    ```bash
+    python3 -m venv .env
+    ```
+
+2. **Activate the virtual environment:**
+
+    - On macOS/Linux:
+
+        ```bash
+        source .env/bin/activate
+        ```
+
+    - On Windows (Command Prompt):
+
+        ```bash
+        .env\Scripts\activate.bat
+        ```
+
+    - On Windows (PowerShell):
+
+        ```bash
+        .env\Scripts\Activate.ps1
+        ```
+
+    You should see `(.env)` prepended to your command prompt, indicating the virtual environment is active.
+
+3. **Install project requirements:**
+
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+    This might take a few minutes as it installs libraries like **TensorFlow**/ **Keras** for the dummy model.
 
 ### Step 1.4: Initialize DVC in Your Project
 
-The first step in any DVC project is to initialize it within your Git repository.
+The first step in any **DVC** project is to initialize it within your **Git** repository.
 
 ```bash
 dvc init
@@ -109,9 +181,9 @@ drwxr-xr-x 2 user user 4096 Apr  1 10:00 tmp
 -rw-r--r-- 1 user user    8 Apr  1 10:00 .gitignore
 ```
 
-DVC creates a `.dvc/` directory and populates it with internal files. The most important one right now is `.dvc/config`, which stores DVC's settings. It also creates a `.dvc/.gitignore` file to ensure Git ignores DVC's internal cache.
+**DVC** creates a `.dvc/` directory and populates it with internal files. The most important one right now is `.dvc/config`, which stores **DVC**'s settings. It also creates a `.dvc/.gitignore` file to ensure **Git** ignores **DVC**'s internal **cache**.
 
-Now, let's add these DVC-related files to Git and commit them. This ties your DVC setup to your Git repository.
+Now, let's add these **DVC**-related files to **Git** and commit them. This ties your **DVC** setup to your **Git** repository.
 
 ```bash
 git status
@@ -145,7 +217,7 @@ git commit -m "Initialize DVC"
 
 ## ⭐ 2. Versioning Your First Dataset (File)
 
-Now that DVC is set up, let's learn how to track individual files. We'll start with a simple XML dataset.
+Now that **DVC** is set up, let's learn how to track individual files. We'll start with a simple XML dataset.
 
 ### Step 2.1: Download Raw Data
 
@@ -161,11 +233,11 @@ dvc get https://github.com/iterative/dataset-registry get-started/data.xml -o da
 100%|█████████████████████████████████████████████████████████████████████████████████████| 2.72K/2.72K [00:00]
 ```
 
-`dvc get` is like `wget` or `curl` but specifically designed to download files tracked by DVC (or Git) repositories.
+`dvc get` is like `wget` or `curl` but specifically designed to download files tracked by **DVC** (or **Git**) repositories.
 
 ### Step 2.2: Add the File to DVC
 
-Now, let's tell DVC to track this `data.xml` file.
+Now, let's tell **DVC** to track this `data.xml` file.
 
 ```bash
 dvc add data/data.xml -v
@@ -181,9 +253,9 @@ To put it under Git version control, run 'git add data/data.xml.dvc'.
 
 What happened?
 
-* DVC moved the actual `data.xml` file into its **cache** (located in `.dvc/cache`).
-* It replaced the original `data.xml` with a small **`.dvc` file** (specifically, `data/data.xml.dvc`). This `.dvc` file is a plain text file that acts as a pointer to the data's content in the DVC cache.
-* DVC also automatically created `data/.gitignore` to tell Git to ignore the actual `data.xml` content, only tracking the `.dvc` pointer file.
+- **DVC** moved the actual `data.xml` file into its **cache** (located in `.dvc/cache`).
+- It replaced the original `data.xml` with a small **`.dvc` file** (specifically, `data/data.xml.dvc`). This `.dvc` file is a plain text file that acts as a pointer to the data's content in the **DVC cache**.
+- **DVC** also automatically created `data/.gitignore` to tell **Git** to ignore the actual `data.xml` content, only tracking the `.dvc` pointer file.
 
 Let's inspect the `.dvc` file:
 
@@ -200,11 +272,11 @@ outs:
   size: 2785
 ```
 
-This `.dvc` file contains metadata about the data: an MD5 hash of its content, its path, and its size. The MD5 hash is crucial as it uniquely identifies the data's content in the DVC cache.
+This `.dvc` file contains metadata about the data: an **MD5 hash** of its content, its path, and its size. The **MD5 hash** is crucial as it uniquely identifies the data's content in the **DVC cache**.
 
 ### Step 2.3: Commit DVC-file to Git
 
-Since `data.xml.dvc` is just a small text file, we can commit it to Git. This links the specific version of your data to your Git commit history.
+Since `data.xml.dvc` is just a small text file, we can commit it to **Git**. This links the specific version of your data to your **Git** commit history.
 
 ```bash
 git add data/.gitignore data/data.xml.dvc
@@ -220,17 +292,17 @@ git commit -m "Add raw data.xml"
  create mode 100644 data/data.xml.dvc
 ```
 
-Now, your Git repository tracks the *metadata* about your data, while DVC manages the large data content efficiently.
+Now, your **Git** repository tracks the *metadata* about your data, while **DVC** manages the large data content efficiently.
 
 ---
 
 ## 📁 3. Versioning a Directory (Cats & Dogs Dataset)
 
-DVC excels at versioning entire directories containing many files, which is common for image datasets.
+**DVC** excels at versioning entire directories containing many files, which is common for image datasets.
 
 ### Step 3.1: Create a New Git Branch
 
-Let's create a new Git branch to track our first version of the cats and dogs dataset.
+Let's create a new **Git** branch to track our first version of the cats and dogs dataset.
 
 ```bash
 git checkout -b cats-dogs-v1
@@ -244,7 +316,7 @@ Switched to a new branch 'cats-dogs-v1'
 
 ### Step 3.2: Download the Cats & Dogs Dataset
 
-We'll download a larger dataset consisting of cat and dog images into a directory named `datadir`. We're using `dvc get --rev` to specify a particular version of the dataset from the remote DVC repository.
+We'll download a larger dataset consisting of cat and dog images into a directory named `datadir`. We're using `dvc get --rev` to specify a particular version of the dataset from the remote **DVC** repository.
 
 ```bash
 dvc get --rev cats-dogs-v1 https://github.com/iterative/dataset-registry use-cases/cats-dogs -o datadir
@@ -272,7 +344,7 @@ cat.1.jpg  cat.10.jpg  cat.100.jpg ... cat.999.jpg
 
 ### Step 3.3: Add the Directory to DVC
 
-Now, add the entire `datadir` to DVC.
+Now, add the entire `datadir` to **DVC**.
 
 ```bash
 dvc add datadir
@@ -286,7 +358,7 @@ To share it, run 'dvc push'.
 To put it under Git version control, run 'git add datadir.dvc'.
 ```
 
-Similar to adding a file, `dvc add` moves the `datadir` content to the DVC cache and creates `datadir.dvc`. For directories, DVC creates a special `.dir` file in its cache that lists the hashes of all files and subdirectories within the tracked directory. This allows efficient versioning of large folder structures.
+Similar to adding a file, `dvc add` moves the `datadir` content to the **DVC cache** and creates `datadir.dvc`. For directories, **DVC** creates a special `.dir` file in its **cache** that lists the hashes of all files and subdirectories within the tracked directory. This allows efficient versioning of large folder structures.
 
 Inspect the `.dvc` file for the directory:
 
@@ -302,11 +374,11 @@ outs:
   path: datadir
 ```
 
-Notice the `.dir` suffix on the MD5 hash, indicating it refers to a directory hash.
+Notice the `.dir` suffix on the **MD5 hash**, indicating it refers to a directory hash.
 
 ### Step 3.4: Commit the DVC-file and Tag the Version
 
-Commit the `datadir.dvc` file to Git and add a Git tag to mark this specific data version.
+Commit the `datadir.dvc` file to **Git** and add a **Git** tag to mark this specific data version.
 
 ```bash
 git add .gitignore datadir.dvc # .gitignore is created by DVC when adding a dir
@@ -323,17 +395,17 @@ git tag -a cats-dogs-v1 -m "Dataset version v1.0"
  create mode 100644 datadir.dvc
 ```
 
-You now have a Git tag `cats-dogs-v1` that points to a specific version of your `datadir` dataset!
+You now have a **Git** tag `cats-dogs-v1` that points to a specific version of your `datadir` dataset!
 
 ---
 
 ## ♻️ 4. Tracking Changes & Updating Data
 
-One of DVC's core strengths is detecting and tracking changes to your data.
+One of **DVC**'s core strengths is detecting and tracking changes to your data.
 
 ### Step 4.1: Check Current DVC Status
 
-Use `dvc status` to see the state of your DVC-tracked files.
+Use `dvc status` to see the state of your **DVC**-tracked files.
 
 ```bash
 dvc status
@@ -345,11 +417,11 @@ dvc status
 Data and pipelines are up to date.
 ```
 
-This indicates that all DVC-tracked data in your workspace matches what DVC expects (i.e., the content pointed to by the `.dvc` files in your current Git commit).
+This indicates that all **DVC**-tracked data in your workspace matches what **DVC** expects (i.e., the content pointed to by the `.dvc` files in your current **Git** commit).
 
 ### Step 4.2: Introduce a New Data Version
 
-Let's simulate an update where our `cats-dogs` dataset doubles in size (e.g., new images added after more data collection). We'll switch to a new Git branch first.
+Let's simulate an update where our `cats-dogs` dataset doubles in size (e.g., new images added after more data collection). We'll switch to a new **Git** branch first.
 
 ```bash
 git checkout -b cats-dogs-v2
@@ -387,7 +459,7 @@ dvc status
 ? datadir
 ```
 
-The `?` indicates that `datadir` exists in your workspace but is **not tracked by DVC's current `.dvc` file**. DVC recognizes that the content of `datadir` has changed since the last `dvc add` operation.
+The `?` indicates that `datadir` exists in your workspace but is **not tracked by DVC's current `.dvc` file**. **DVC** recognizes that the content of `datadir` has changed since the last `dvc add` operation.
 
 ### Step 4.3: Capture the New Data Version with DVC
 
@@ -406,9 +478,9 @@ To share it, run 'dvc push'.
 To put it under Git version control, run 'git add datadir.dvc'.
 ```
 
-DVC detects the change, updates its cache, and modifies `datadir.dvc` to point to the new content hash.
+**DVC** detects the change, updates its **cache**, and modifies `datadir.dvc` to point to the new content hash.
 
-Now, commit the updated `datadir.dvc` file to Git and tag it as `cats-dogs-v2`.
+Now, commit the updated `datadir.dvc` file to **Git** and tag it as `cats-dogs-v2`.
 
 ```bash
 git add datadir.dvc
@@ -423,17 +495,17 @@ git tag -a cats-dogs-v2 -m "Dataset version v2.0"
  1 file changed, 2 insertions(+), 2 deletions(-)
 ```
 
-You now have two distinct versions of your dataset (`cats-dogs-v1` and `cats-dogs-v2`) linked to different Git tags, all managed efficiently by DVC.
+You now have two distinct versions of your dataset (`cats-dogs-v1` and `cats-dogs-v2`) linked to different **Git** tags, all managed efficiently by **DVC**.
 
 ---
 
 ## ⏪ 5. Switching Between Data Versions (`dvc checkout`)
 
-The power of DVC comes from its ability to quickly switch between different versions of your data, just like Git switches code versions.
+The power of **DVC** comes from its ability to quickly switch between different versions of your data, just like **Git** switches code versions.
 
-### Step 5.1: Switch to a Different Branch (Without `datadir`)
+### Step 5.1: Switch to a Different Branch (`datadir` Removal)
 
-Let's switch back to our initial `tutorial` branch, which does *not* contain the `datadir.dvc` file.
+Let's switch back to our initial `tutorial` branch, which does *not* contain the `datadir.dvc` file in its **Git** history.
 
 ```bash
 git checkout tutorial
@@ -458,9 +530,9 @@ ls
 .dvc  .env  data  main.py  requirements.txt  train.py
 ```
 
-Notice that `datadir` is gone from your workspace! This is because the `tutorial` branch doesn't have the `datadir.dvc` file in its Git history.
+Notice that `datadir` is gone from your workspace! This is because the `tutorial` branch's **Git** history doesn't track `datadir.dvc`.
 
-To restore the DVC-tracked data that *should* be present for the current Git commit, you need to run `dvc checkout`.
+To ensure your workspace accurately reflects the **DVC-tracked data** for the *current Git commit*, you need to run `dvc checkout`. This command will synchronize your workspace with the **DVC cache** based on the `.dvc` files that are currently in your **Git** index.
 
 ```bash
 dvc checkout
@@ -473,18 +545,18 @@ M       data/data.xml
 D       datadir
 ```
 
-The `datadir` disappeared! That's because when you switched to the `tutorial` branch, `dvc checkout` detected that:
+What happened?
 
-1. The `tutorial` branch's `data/data.xml.dvc` file points to a different version than what's currently in your workspace (it brought back the `data.xml` content - hence `M` for modified)
-2. The `tutorial` branch doesn't have a `datadir.dvc` file, so DVC removed `datadir` from your workspace to match the `tutorial` branch's Git state (hence `D` for deleted)
+- `M data/data.xml`: If the `data/data.xml` in your workspace (from previous steps) was different from what `data/data.xml.dvc` (tracked on `tutorial` branch) points to, **DVC** updated it.
+- `D datadir`: Since the `tutorial` branch's **Git** history *does not* include `datadir.dvc`, **DVC** recognized that the physical `datadir` directory in your workspace was no longer tracked by **DVC** for this **Git** commit. Thus, **DVC** **deleted** `datadir` from your workspace to keep it clean and consistent with the current **Git** branch's data versioning state.
 
-This demonstrates how DVC keeps your workspace synchronized with the data versions defined in your current Git commit.
+This demonstrates how **DVC** intelligently removes untracked (by **DVC**) data from your workspace when you switch to a **Git** commit that doesn't expect it.
 
 Let's specifically try to restore the `cats-dogs-v1` version.
 
 ### Step 5.2: Restore a Specific Data Version
 
-We want to get back the `cats-dogs-v1` dataset. First, switch your Git repository to that version's tag.
+We want to get back the `cats-dogs-v1` dataset. First, switch your **Git** repository to that version's tag.
 
 ```bash
 git checkout cats-dogs-v1
@@ -510,7 +582,7 @@ ls
 .dvc  .env  data  datadir  main.py  requirements.txt  train.py
 ```
 
-`datadir` is there, but its content is likely the `v2` content you just had. Why? Because `git checkout` only updates the `.dvc` *pointer files* in your workspace. It does *not* automatically fetch the actual data content. That's DVC's job!
+`datadir` is there, but its content is likely the `v2` content you just had. Why? Because `git checkout` only updates the `.dvc` *pointer files* in your workspace. It does *not* automatically fetch the actual data content. That's **DVC**'s job!
 
 To truly bring the `cats-dogs-v1` data content into your workspace, you must run `dvc checkout`:
 
@@ -530,17 +602,17 @@ M       datadir
 ls datadir/data/train/dogs | head -n 5
 ```
 
-You can verify the number of files or file names to ensure you are on `v1` (e.g., v1 had 500 dogs, v2 had 1000). This demonstrates that DVC efficiently retrieves the correct data version from its cache without re-downloading or copying large files unnecessarily.
+You can verify the number of files or file names to ensure you are on `v1` (e.g., v1 had 500 dogs, v2 had 1000). This demonstrates that **DVC** efficiently retrieves the correct data version from its **cache** without re-downloading or copying large files unnecessarily.
 
 ---
 
 ## ☁️ 6. Storing and Sharing Data with Remotes
 
-DVC's cache stores data locally. To share data with your team or deploy models, you need a **remote storage** location. This can be cloud storage (S3, GCS, Azure Blob), network file systems, or even a local directory.
+**DVC**'s **cache** stores data locally. To share data with your team or deploy models, you need a **remote storage** location. This can be cloud storage (**S3**, **GCS**, **Azure Blob**), network file systems, or even a local directory.
 
 ### Step 6.1: Set Up a Local Remote Storage
 
-For simplicity in this tutorial, we'll set up a local directory as our DVC remote. In a real-world scenario, this would be cloud storage.
+For simplicity in this tutorial, we'll set up a local directory as our **DVC remote**. In a real-world scenario, this would be cloud storage.
 
 ```bash
 mkdir -p /tmp/dvc_remote_storage
@@ -553,9 +625,9 @@ dvc remote add -d local_storage /tmp/dvc_remote_storage
 Setting 'local_storage' as a default remote.
 ```
 
-* **`mkdir -p /tmp/dvc_remote_storage`**: Creates a temporary directory.
+- **`mkdir -p /tmp/dvc_remote_storage`**: Creates a temporary directory.
     👉 **IMPORTANT:** In a real project, **NEVER** use `/tmp` for long-term storage, as it's frequently cleared by your system. Use a persistent directory or, ideally, cloud storage.
-* **`dvc remote add -d local_storage /tmp/dvc_remote_storage`**: Tells DVC about a new remote named `local_storage` and sets it as the default (`-d`).
+- **`dvc remote add -d local_storage /tmp/dvc_remote_storage`**: Tells **DVC** about a new **remote** named `local_storage` and sets it as the default (`-d`).
 
 This command modifies your `.dvc/config` file. Let's see:
 
@@ -572,7 +644,7 @@ cat .dvc/config
  url = /tmp/dvc_remote_storage
 ```
 
-Now, commit this configuration change to Git so your team knows where the data is supposed to be stored.
+Now, commit this configuration change to **Git** so your team knows where the data is supposed to be stored.
 
 ```bash
 git add .dvc/config
@@ -588,7 +660,7 @@ git commit -m "Add local DVC remote storage"
 
 ### Step 6.2: Push Data to Remote Storage
 
-To upload the DVC-tracked data from your local cache to the configured remote, use `dvc push`.
+To upload the **DVC**-tracked data from your local **cache** to the configured **remote**, use `dvc push`.
 
 ```bash
 dvc push -v
@@ -605,9 +677,9 @@ Pushing 'datadir' to 'local_storage'
 Pushed data to 'local_storage'.
 ```
 
-DVC only pushes the actual data content, not the `.dvc` pointer files (which are in Git). It's intelligent enough to only upload data that isn't already present in the remote storage.
+**DVC** only pushes the actual data content, not the `.dvc` pointer files (which are in **Git**). It's intelligent enough to only upload data that isn't already present in the **remote storage**.
 
-You can verify the data was pushed by checking the remote directory (it mirrors DVC's cache structure):
+You can verify the data was pushed by checking the **remote** directory (it mirrors **DVC**'s **cache** structure):
 
 ```bash
 ls /tmp/dvc_remote_storage
@@ -619,11 +691,11 @@ ls /tmp/dvc_remote_storage
 a3 b6
 ```
 
-These are directories named after the first two characters of the data's MD5 hashes.
+These are directories named after the first two characters of the data's **MD5 hashes**.
 
 ### Step 6.3: Retrieve Data from Remote Storage
 
-Now, let's simulate a scenario where a new team member joins or you're working on a new machine. The data isn't in your local DVC cache.
+Now, let's simulate a scenario where a new team member joins or you're working on a new machine. The data isn't in your local **DVC cache**.
 
 1. **Remove local cache and data:**
 
@@ -650,7 +722,7 @@ Now, let's simulate a scenario where a new team member joins or you're working o
     Pulled data to 'local_storage'.
     ```
 
-    `dvc pull` checks the `.dvc` files in your current Git commit, looks up the corresponding data hashes in the remote, downloads them to your local DVC cache, and then links them back into your workspace.
+    `dvc pull` checks the `.dvc` files in your current **Git** commit, looks up the corresponding data hashes in the **remote**, downloads them to your local **DVC cache**, and then links them back into your workspace.
 
     Verify that your data is back:
 
@@ -659,17 +731,17 @@ Now, let's simulate a scenario where a new team member joins or you're working o
     ls data
     ```
 
-    You should see both `datadir` and `data/data.xml` restored. This demonstrates how DVC enables seamless data sharing and environment setup for collaborative ML projects.
+    You should see both `datadir` and `data/data.xml` restored. This demonstrates how **DVC** enables seamless data sharing and environment setup for collaborative **ML** projects.
 
 ---
 
 ## 📥 7. Advanced Data Access Commands
 
-DVC offers more specialized commands for accessing and incorporating data from other DVC repositories or external URLs.
+**DVC** offers more specialized commands for accessing and incorporating data from other **DVC** repositories or external **URLs**.
 
 ### Step 7.1: Explore Remote DVC Repositories (`dvc list`)
 
-You can explore the contents of any DVC repository hosted on a Git server without cloning it first.
+You can explore the contents of any **DVC** repository hosted on a **Git** server without cloning it first.
 
 ```bash
 dvc list https://github.com/iterative/dataset-registry use-cases
@@ -682,13 +754,13 @@ cats-dogs/
 get-started/
 ```
 
-This shows the directories available under the `use-cases` path in that DVC dataset registry.
+This shows the directories available under the `use-cases` path in that **DVC** dataset registry.
 
 ### Step 7.2: Download Data Without Tracking (`dvc get`)
 
-You've already used `dvc get` earlier. It downloads data from a DVC remote repository to your current working directory, but it **does not** automatically add the downloaded data to *your* DVC project.
+You've already used `dvc get` earlier. It downloads data from a **DVC remote** repository to your current working directory, but it **does not** automatically add the downloaded data to *your* **DVC** project.
 
-Let's get `cats-dogs` again, but this time, into a new folder to confirm it's not DVC-tracked locally:
+Let's get `cats-dogs` again, but this time, into a new folder to confirm it's not **DVC**-tracked locally:
 
 ```bash
 dvc get https://github.com/iterative/dataset-registry use-cases/cats-dogs -o cats-dogs-untracked
@@ -708,7 +780,7 @@ You'll see `cats-dogs-untracked` directory. If you check `dvc status` or look fo
 
 ### Step 7.3: Download and Track Data (`dvc import`)
 
-`dvc import` is like `dvc get` followed by `dvc add`. It downloads data from another DVC repository *and* automatically registers it with your local DVC project, creating a `.dvc` file for it.
+`dvc import` is like `dvc get` followed by `dvc add`. It downloads data from another **DVC** repository *and* automatically registers it with your local **DVC** project, creating a `.dvc` file for it.
 
 ```bash
 dvc import git@github.com:iterative/example-get-started data/data.xml -o imported_data.xml
@@ -728,11 +800,11 @@ ls
 cat imported_data.xml.dvc
 ```
 
-You'll see `imported_data.xml` and its corresponding `imported_data.xml.dvc` file, indicating it's now tracked by your DVC project.
+You'll see `imported_data.xml` and its corresponding `imported_data.xml.dvc` file, indicating it's now tracked by your **DVC** project.
 
 ### Step 7.4: Track External URLs (`dvc import-url`)
 
-`dvc import-url` allows you to track data directly from an external URL (HTTP/HTTPS, S3, GCS, HDFS, etc.) into your DVC project. It downloads the data and creates a `.dvc` file for it. This is useful for managing external datasets that you don't control.
+`dvc import-url` allows you to track data directly from an external **URL** (**HTTP/HTTPS**, **S3**, **GCS**, **Azure Blob**, etc.) into your **DVC** project. It downloads the data and creates a `.dvc` file for it. This is useful for managing external datasets that you don't control.
 
 ```bash
 dvc import-url https://data.dvc.org/get-started/data.xml -o external_data.xml
@@ -744,29 +816,29 @@ dvc import-url https://data.dvc.org/get-started/data.xml -o external_data.xml
 100%|█████████████████████████████████████████████████████████████████████████████████████| 2.72K/2.72K [00:00]
 ```
 
-You will find `external_data.xml` and `external_data.xml.dvc` in your project. If the data at the URL changes, `dvc update external_data.xml.dvc` (or `dvc pull`) can pull the new version.
+You will find `external_data.xml` and `external_data.xml.dvc` in your project. If the data at the **URL** changes, `dvc update external_data.xml.dvc` (or `dvc pull`) can pull the new version.
 
 ---
 
 ## 🔍 8. Understanding DVC File and Cache Internals
 
-Let's take a closer look at the files and directories DVC creates and manages, which underpin its versioning capabilities.
+Let's take a closer look at the files and directories **DVC** creates and manages, which underpin its versioning capabilities.
 
-### Step 9.1: The `.dvc` File
+### Step 8.1: The `.dvc` File
 
-We've already seen examples like `data/data.xml.dvc` and `datadir.dvc`. These are small YAML files that act as pointers to the actual data content, which lives in DVC's cache.
+We've already seen examples like `data/data.xml.dvc` and `datadir.dvc`. These are small **YAML** files that act as pointers to the actual data content, which lives in **DVC**'s **cache**.
 
 For a single file (`data/data.xml.dvc`), the `.dvc` file usually contains:
 
-* `md5`: An MD5 hash of the file's content. This uniquely identifies the file.
-* `path`: The relative path to the data file in the workspace.
-* `size`: The size of the data file in bytes.
+- `md5`: An **MD5 hash** of the file's content. This uniquely identifies the file.
+- `path`: The relative path to the data file in the workspace.
+- `size`: The size of the data file in bytes.
 
 For a directory (`datadir.dvc`), the `md5` field will end with `.dir`, indicating that the hash represents the content of the entire directory, not a single file. This "directory hash" is calculated based on the hashes of all files and subdirectories within it.
 
-### Step 9.2: The DVC Cache (`.dvc/cache`)
+### Step 8.2: The DVC Cache (`.dvc/cache`)
 
-The `.dvc/cache` directory is where DVC stores the actual content of your data and model files.
+The `.dvc/cache` directory is where **DVC** stores the actual content of your data and model files.
 
 ```bash
 ls -la .dvc/cache
@@ -781,15 +853,15 @@ drwxr-xr-x 2 user user 4096 Apr  1 10:00 a3
 drwxr-xr-x 2 user user 4096 Apr  1 10:00 b6
 ```
 
-Inside `.dvc/cache`, DVC organizes files based on their MD5 hash. The first two characters of the hash form a subdirectory, and the rest become the filename within that subdirectory. This helps to prevent too many files in one directory and makes lookup efficient.
+Inside `.dvc/cache`, **DVC** organizes files based on their **MD5 hash**. The first two characters of the hash form a subdirectory, and the rest become the filename within that subdirectory. This helps to prevent too many files in one directory and makes lookup efficient.
 
-For example, if your `data.xml` had an MD5 hash starting with `a3`, its content would be stored in `.dvc/cache/a3/04afb96060aad90176268345e10355`. If `datadir` had a directory hash starting with `b6`, its metadata (listing hashes of its contents) would be in `.dvc/cache/b6/923e1e4ad16ea1a7e2b328842d56a2.dir`.
+For example, if your `data.xml` had an **MD5 hash** starting with `a3`, its content would be stored in `.dvc/cache/a3/04afb96060aad90176268345e10355`. If `datadir` had a directory hash starting with `b6`, its metadata (listing hashes of its contents) would be in `.dvc/cache/b6/923e1e4ad16ea1a7e2b328842d56a2.dir`.
 
-**Key Advantage:** If you have multiple DVC-tracked files with different names but *identical content*, DVC only stores one copy of that content in the cache, saving disk space.
+**Key Advantage:** If you have multiple **DVC**-tracked files with different names but *identical content*, **DVC** only stores one copy of that content in the **cache**, saving disk space.
 
-### Step 9.3: The `.dvc` Directory Structure
+### Step 8.3: The `.dvc` Directory Structure
 
-The `.dvc/` directory is DVC's internal workspace for your project.
+The `.dvc/` directory is **DVC**'s internal workspace for your project.
 
 ```bash
 ls -la .dvc
@@ -808,44 +880,44 @@ drwxr-xr-x 2 user user 4096 Apr  1 10:00 tmp
 # plots/, experiments/ etc.
 ```
 
-* `.dvc/config`: Main DVC configuration (remotes, cache location, etc.).
-* `.dvc/cache`: Where actual data/model content is stored.
-* `.dvc/.gitignore`: Ensures Git ignores the cache and other DVC internal files.
-* `.dvc/tmp`: Temporary files used by DVC.
-* Other directories like `.dvc/plots` or `.dvc/experiments` might appear if you use DVC's plotting or experiment management features.
+- `.dvc/config`: Main **DVC** configuration (**remotes**, **cache** location, etc.).
+- `.dvc/cache`: Where actual data/model content is stored.
+- `.dvc/.gitignore`: Ensures **Git** ignores the **cache** and other **DVC internal files**.
+- `.dvc/tmp`: Temporary files used by **DVC**.
+- Other directories like `.dvc/plots` or `.dvc/experiments` might appear if you use **DVC**'s plotting or experiment management features.
 
-Understanding these internals helps you grasp how DVC efficiently links your Git-versioned code with your large, DVC-versioned data and models.
+Understanding these internals helps you grasp how **DVC** efficiently links your **Git**-versioned code with your large, **DVC**-versioned data and models.
 
 ---
 
 ## 🔗 Additional Resources
 
-* **DVC Official Documentation:** [https://dvc.org/doc](https://dvc.org/doc)
-* **DVC Get Started:** [https://dvc.org/doc/start](https://dvc.org/doc/start)
-* **DVC User Guide (Files & Directories):** [https://dvc.org/doc/user-guide/dvc-files-and-directories](https://dvc.org/doc/user-guide/dvc-files-and-directories)
-* **DVC Get Started: Data Pipelines:** [https://dvc.org/doc/start/data-pipelines](https://dvc.org/doc/start/data-pipelines)
-* **Example: Tracking a remote file (for `dvc import-url`):** [https://dvc.org/doc/command-reference/import-url](https://dvc.org/doc/command-reference/import-url)
+- **DVC Official Documentation:** [https://dvc.org/doc](https://dvc.org/doc)
+- **DVC Get Started:** [https://dvc.org/doc/start](https://dvc.org/doc/start)
+- **DVC User Guide (Files & Directories):** [https://dvc.org/doc/user-guide/dvc-files-and-directories](https://dvc.org/doc/user-guide/dvc-files-and-directories)
+- **DVC Get Started: Data Pipelines:** [https://dvc.org/doc/start/data-pipelines](https://dvc.org/doc/start/data-pipelines)
+- **Example: Tracking a remote file (for `dvc import-url`):** [https://dvc.org/doc/command-reference/import-url](https://dvc.org/doc/command-reference/import-url)
 
 ---
 
 ## 🎉 Conclusion & Next Steps
 
-Congratulations! You've successfully completed this hands-on tutorial on Data and Model Versioning with DVC.
+Congratulations! You've successfully completed this hands-on tutorial on Data and Model Versioning with **DVC**.
 
 ### Key Learnings
 
-* You've learned how to initialize DVC and version large files and directories alongside your Git repository.
-* You now understand the crucial role of `.dvc` files and the DVC cache in maintaining data integrity and reproducibility.
-* You've mastered how to switch between different data versions and how to efficiently share data using DVC remotes.
-* You've gained an initial understanding of DVC pipelines, which allow you to track and reproduce entire ML workflows.
+- You've learned how to initialize **DVC** and version large files and directories alongside your **Git** repository.
+- You now understand the crucial role of `.dvc` files and the **DVC cache** in maintaining data integrity and reproducibility.
+- You've mastered how to switch between different data versions and how to efficiently share data using **DVC remotes**.
+- You've gained an initial understanding of **DVC pipelines**, which allow you to track and reproduce entire **ML workflows**.
 
 ### Where to go from here?
 
-* **Experiment Management (MLflow):** Explore how DVC integrates with MLflow for comprehensive experiment tracking, logging metrics, and managing models in a registry.
-* **Continuous Integration/Delivery for ML (CI/CD for MLOps):** Learn how to set up CI/CD pipelines that leverage DVC's `dvc repro` to automate model retraining, evaluation, and deployment upon code or data changes.
-* **Advanced DVC Features:** Dive deeper into DVC's capabilities for metrics and plots tracking, experiment versioning (`dvc exp`), and managing more complex data dependencies.
-* **Cloud Remotes:** Transition from local DVC remotes to cloud storage solutions (AWS S3, Google Cloud Storage, Azure Blob Storage) for real-world production deployments.
+- **Experiment Management (MLflow):** Explore how **DVC** integrates with **MLflow** for comprehensive experiment tracking, logging **metrics**, and managing models in a registry.
+- **Continuous Integration/Delivery for ML (CI/CD for MLOps):** Learn how to set up **CI/CD pipelines** that leverage **DVC**'s `dvc repro` to automate model retraining, evaluation, and deployment upon code or data changes.
+- **Advanced DVC Features:** Dive deeper into **DVC**'s capabilities for **metrics** and plots tracking, experiment versioning (`dvc exp`), and managing more complex data **dependencies**.
+- **Cloud Remotes:** Transition from local **DVC remotes** to cloud storage solutions (**AWS S3**, **Google Cloud Storage**, **Azure Blob Storage**) for real-world production deployments.
 
-Keep practicing these MLOps fundamentals. The ability to version, reproduce, and share your data and models reliably is a superpower in modern AI development!
+Keep practicing these **MLOps** fundamentals. The ability to version, reproduce, and share your data and models reliably is a superpower in modern **AI** development!
 
-[⬆️ Back to Table of Contents](#-table-of-contents)å
+[⬆️ Back to Table of Contents](#-table-of-contents)
