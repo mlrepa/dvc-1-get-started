@@ -1,0 +1,63 @@
+# Pre-commit hooks to ensure code quality before commits
+# Install: uv run pre-commit install
+# Run manually: uv run pre-commit run --all-files
+
+repos:
+  # Basic file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-added-large-files
+        args: ['--maxkb=2048']  # Allow up to 2MB files
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: debug-statements
+        exclude: ^tests/  # Allow debug statements in tests
+
+  # Python code formatting and linting
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.11
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+        types_or: [python, pyi, jupyter]
+      - id: ruff-format
+        types_or: [python, pyi, jupyter]
+
+  # Type checking (with relaxed settings for MLOps course)
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.15.0
+    hooks:
+      - id: mypy
+        args: [
+          --config-file=pyproject.toml,
+          --explicit-package-bases,
+          --namespace-packages
+        ]
+        additional_dependencies: [
+          pandas-stubs>=2.0.0,
+          types-PyYAML>=6.0.0,
+          types-requests>=2.31.0,
+        ]
+        exclude: ^tests/  # Skip type checking for tests initially
+
+  # Security scanning
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: ^(\.venv/|\.git/|htmlcov/|\.pytest_cache/|.*\.dvc$)
+
+  # Additional Python checks
+  - repo: https://github.com/pycqa/bandit
+    rev: 1.8.3
+    hooks:
+      - id: bandit
+        args: [--quiet]
+        files: ^src/.*\.py$
+        exclude: ^tests/
