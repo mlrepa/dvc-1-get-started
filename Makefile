@@ -52,6 +52,9 @@ tutorial-clean: ## Clean up all DVC-related files and data (reset to initial sta
 		grep -v "^/data" .gitignore > .gitignore.tmp && mv .gitignore.tmp .gitignore || true; \
 		grep -v "^/datadir" .gitignore > .gitignore.tmp && mv .gitignore.tmp .gitignore || true; \
 	fi
+	@# Remove Git branches created during tutorial
+	git checkout main
+	git branch -D cats-dogs-v1 cats-dogs-v2 tutorial
 	@echo "✅ DVC tutorial cleanup complete! Repository reset to initial state."
 
 tutorial-init: ## Initialize DVC in the project (Step 1.4)
