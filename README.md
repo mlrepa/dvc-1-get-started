@@ -92,4 +92,4 @@ For a deeper dive into the development workflow, tool configurations, and contri
 
 ---
 
-**Happy MLOps journey! We hope this starter project helps you learn and experiment. 🚀**
+**Happy DVC journey! 🚀**
