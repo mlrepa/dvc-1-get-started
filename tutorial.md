@@ -474,6 +474,7 @@ D       datadir
 ```
 
 The `datadir` disappeared! That's because when you switched to the `tutorial` branch, `dvc checkout` detected that:
+
 1. The `tutorial` branch's `data/data.xml.dvc` file points to a different version than what's currently in your workspace (it brought back the `data.xml` content - hence `M` for modified)
 2. The `tutorial` branch doesn't have a `datadir.dvc` file, so DVC removed `datadir` from your workspace to match the `tutorial` branch's Git state (hence `D` for deleted)
 
