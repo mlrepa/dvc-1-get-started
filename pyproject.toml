@@ -1,0 +1,95 @@
+[project]
+name = "dvc-1-get-started"
+version = "0.1.0"
+description = "MLOps starter project with DVC for data version control"
+readme = "README.md"
+requires-python = ">=3.11.6"
+
+# Core dependencies needed to run the project
+dependencies = [
+
+    "dvc>=3.60.0",
+    "joblib>=1.5.1",
+    "pandas>=2.3.0",
+    "scikit-learn>=1.7.0",
+]
+
+[dependency-groups]
+# Dependencies needed only during development (testing, linting, etc.)
+# Install with: uv sync --group dev
+dev = [
+    "mypy>=1.15.0",
+    "ruff>=0.11.11",
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "pre-commit>=4.2.0",
+    "detect-secrets>=1.5.0",
+]
+
+[tool.ruff]
+# Ruff is a super-fast Python linter and formatter.
+line-length = 88  # Max characters per line (like Black's default)
+target-version = "py311" # Assumes Python 3.11 features
+
+[tool.ruff.lint]
+# Select which types of issues Ruff should check for.
+# E/W: pycodestyle errors/warnings (PEP 8)
+# F: Pyflakes (logical errors like unused imports/variables)
+# I: isort (import sorting)
+# B: flake8-bugbear (potential bugs and design issues)
+# C4: flake8-comprehensions (more Pythonic list/dict/set comprehensions)
+# UP: pyupgrade (suggests modern Python syntax)
+select = ["E", "W", "F", "I", "B", "C4", "UP"]
+ignore = [] # Add specific rule codes here to ignore them
+
+[tool.ruff.format]
+# Configure Ruff's auto-formatting behavior.
+quote-style = "double"    # Prefer "double" quotes for strings
+indent-style = "space"    # Use spaces for indentation
+
+[tool.mypy]
+# Mypy is a static type checker for Python.
+python_version = "3.11"        # Target Python version for type checking
+warn_return_any = true         # Warn if functions implicitly return 'Any'
+warn_unused_configs = true     # Warn about unused Mypy settings
+disallow_untyped_defs = true   # Require type hints for function definitions
+disallow_incomplete_defs = true # Require all parts of a function signature to be typed
+check_untyped_defs = true      # Still type check the body of untyped functions
+disallow_untyped_decorators = true # Require decorators to be typed
+no_implicit_optional = true    # Make 'Optional[T]' explicit (no 'T' implying 'T | None')
+warn_redundant_casts = true    # Warn if a type cast is unnecessary
+warn_unused_ignores = true     # Warn about '# type: ignore' comments that are no longer needed
+warn_no_return = true          # Warn if a function doesn't return when it should (or vice-versa)
+warn_unreachable = true        # Warn about code that can never be executed
+strict_equality = true         # Enforce stricter type checking for equality operations
+
+# Fix module path issues
+explicit_package_bases = true
+namespace_packages = true
+
+# Handle missing imports gracefully for MLOps libraries
+ignore_missing_imports = true
+
+# Exclude problematic directories
+exclude = [
+    "^build/",
+    "^dist/",
+    "^\\.venv/",
+    "^\\.git/",
+]
+
+# Specific overrides for ML libraries without type stubs
+[[tool.mypy.overrides]]
+module = [
+    "sklearn.*",
+    "joblib.*",
+    "pandas.*",
+    "numpy.*",
+]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+# Pytest is a popular Python testing framework.
+testpaths = ["tests"]          # # Directory where your tests are located
+pythonpath = ["."]             # This adds the project root to Python path
+addopts = "--cov=src --cov-report=term-missing --cov-report=html"
